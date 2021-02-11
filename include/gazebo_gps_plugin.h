@@ -115,6 +115,7 @@ private:
   std::queue<sensor_msgs::msgs::SITLGps> gps_delay_buffer_;
 
   ignition::math::Vector3d gps_bias_;
+  ignition::math::Vector3d gps_attack_{};
   ignition::math::Vector3d noise_gps_pos_;
   ignition::math::Vector3d noise_gps_vel_;
   ignition::math::Vector3d random_walk_gps_;
@@ -127,6 +128,8 @@ private:
   std::default_random_engine rand_;
   std::normal_distribution<float> randn_;
   static constexpr const double gps_corellation_time_ = 60.0;    // s
+  double gps_attack_time_ = -1;
+  double gps_attack_rate_ = 0;
   double gps_xy_random_walk_;
   double gps_z_random_walk_;
   double gps_xy_noise_density_;
