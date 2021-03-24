@@ -203,6 +203,17 @@ void GpsPlugin::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   }
   parentSensor_->SetUpdateRate(update_rate_);
 
+  // load gps attack
+  if(_sdf->HasElement("gpsAttackTime")) {
+    getSdfParam<double>(_sdf, "gpsAttackTime", gps_attack_time_, -1);
+    gzdbg << "gps_attack_time: " << gps_attack_time_ << "\n";
+  }
+
+  if(_sdf->HasElement("gpsAttackRate")) {
+    getSdfParam<double>(_sdf, "gpsAttackRate", gps_attack_rate_, 0);
+    gzdbg << "gps_attack_rate: " << gps_attack_rate_ << "\n";
+  }
+
   node_handle_ = transport::NodePtr(new transport::Node());
   node_handle_->Init(namespace_);
 
@@ -286,8 +297,14 @@ void GpsPlugin::OnWorldUpdate(const common::UpdateInfo& /*_info*/)
   gps_bias_.Y() += random_walk_gps_.Y() * dt - gps_bias_.Y() / gps_corellation_time_;
   gps_bias_.Z() += random_walk_gps_.Z() * dt - gps_bias_.Z() / gps_corellation_time_;
 
+  // gps cyberattack
+  if (gps_attack_time_ >= 0 && current_time > gps_attack_time_) {
+    gps_attack_.X() += gps_attack_rate_ * dt;
+    gzdbg << "gps_attack: " << gps_attack_.X() << "\n";
+  }
+
   // reproject position with noise into geographic coordinates
-  auto pos_with_noise = pos_W_I + noise_gps_pos_ + gps_bias_;
+  auto pos_with_noise = pos_W_I + noise_gps_pos_ + gps_bias_ + gps_attack_;
   auto latlon = reproject(pos_with_noise, lat_home_, lon_home_, alt_home_);
 
   // fill SITLGps msg
